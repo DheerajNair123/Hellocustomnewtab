@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Dheeraj ",
   "description": "A description of your extension.",
-  "version": "1.0",
+  "version": "2.0",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },

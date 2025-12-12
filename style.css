@@ -17,14 +17,24 @@ body {
   justify-content: center;
   align-items: center;
 }
+#main {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* so it doesn't block clicks */
+}
+
 
 /* Custom Cursor */
 #cursor {
-  position: fixed;
-  height: 15px;
   width: 15px;
+  height: 15px;
   border-radius: 50%;
   background-color: #0077ff;
+  position: fixed; /* must be fixed for clientX/top positioning */
+  transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 10000;
 }

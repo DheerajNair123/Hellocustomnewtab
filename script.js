@@ -1,4 +1,46 @@
 // == Bubble dashboard script ==
+// Smooth cursor follow (robust, works with or without GSAP)
+document.addEventListener('DOMContentLoaded', () => {
+  const cursor = document.getElementById('cursor');
+  if (!cursor) return; // nothing to do
+
+  // Ensure cursor is centered on coordinates (CSS fallback)
+  // If you already have this in CSS, it's ok — no harm repeating here
+  cursor.style.position = 'fixed';
+  cursor.style.left = '0px';
+  cursor.style.top = '0px';
+  cursor.style.transform = 'translate(-50%, -50%)';
+  cursor.style.pointerEvents = 'none';
+  cursor.style.zIndex = '10000';
+
+  // Handler uses clientX/clientY so it's relative to viewport
+  function rawMove(e) {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  }
+
+  // If GSAP present, use it for smooth motion; otherwise fallback
+  if (window.gsap && typeof gsap.to === 'function') {
+    // small duration gives smooth trail; tune duration for feel
+    window.addEventListener('mousemove', (e) => {
+      gsap.to(cursor, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.14,
+        ease: 'power3.out',
+        overwrite: true
+      });
+    });
+    // also update immediately on touch/mouse enter so it doesn't jump
+    window.addEventListener('mouseenter', (e) => {
+      gsap.set(cursor, { x: e.clientX, y: e.clientY });
+    });
+  } else {
+    // simple reliable fallback
+    window.addEventListener('mousemove', rawMove);
+    window.addEventListener('mouseenter', rawMove);
+  }
+});
 
 // ===============================
 // Create Trash Bin
