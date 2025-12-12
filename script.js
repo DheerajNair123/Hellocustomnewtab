@@ -220,7 +220,7 @@ function attachClickHandlers(container) {
       startPick(container, e.clientX, e.clientY);
     } else {
       // Normal click = Open link
-      window.open(link.href, "_blank");
+      window.location.href = link.href;
     }
   });
 }
@@ -322,7 +322,7 @@ function createBubbleElement(b) {
   const link = document.createElement("a");
   link.className = "bubble-link";
   link.href = b.href;
-  link.target = "_blank";
+  // link.target = "_blank";
 
   const span = document.createElement("span");
   span.textContent = b.name;
