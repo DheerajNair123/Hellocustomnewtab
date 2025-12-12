@@ -141,6 +141,8 @@ body {
   font-size: 25px;
   font-weight: 500;
   transition: 0.25s ease;
+  position: absolute;
+  pointer-events: auto;
 }
 
 
@@ -165,6 +167,21 @@ body {
   transition: 0.25s ease;
 }*/
 
+.bubble-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* inside the container */
+  z-index: 1;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
 .circle:hover {
   transform: scale(1.09);
@@ -175,6 +192,7 @@ body {
 /* Hover font animation */
 .circle span {
   transition: 0.2s ease;
+  pointer-events: none;
 }
 .circle:hover span {
   transform: scale(1.1);
@@ -252,4 +270,46 @@ body.dark-theme .search-box {
 body.dark-theme .instructions {
   background: rgba(20,20,20,0.75);
   color: white;
+}
+#trash-bin {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+
+  width: 120px;
+  height: 120px;
+
+  background: red;
+  border-top-left-radius: 120px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 60px;
+  color: #b3e7ff;
+
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+
+  pointer-events: none;
+  z-index: 999999;    /* ← BIG FIX */
+}
+
+#trash-bin.active {
+  opacity: 1;
+  transform: scale(1);
+}
+/* inner delete hotspot */
+#trash-hit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 90px;   /* deletion hotspot width */
+  height: 90px;  /* deletion hotspot height */
+  background: rgba(255, 0, 0, 0.3);
+  border-top-left-radius: 90px;
+
+  pointer-events: none;
 }

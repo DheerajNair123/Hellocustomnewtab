@@ -1,16 +1,19 @@
-// == Bubble dashboard script (fixed & improved) ==
+// == Bubble dashboard script ==
+const trashBin = document.getElementById("trash-bin");
 
 var main = document.querySelector("#main") || document.body;
 var cursor = document.querySelector("#cursor");
 
-// --- Cursor follow (GSAP if available, fallback simple) ---
-if (typeof gsap !== 'undefined' && cursor) {
+// ===============================
+// Cursor movement
+// ===============================
+if (typeof gsap !== "undefined" && cursor) {
   main.addEventListener("mousemove", (e) => {
     gsap.to(cursor, {
       x: e.pageX,
       y: e.pageY,
       duration: 0.6,
-      ease: "power.inOut"
+      ease: "power.inOut",
     });
   });
 } else if (cursor) {
@@ -20,255 +23,296 @@ if (typeof gsap !== 'undefined' && cursor) {
   });
 }
 
-// --- Clock (shows hours:minutes AM/PM) ---
+// ===============================
+// Clock
+// ===============================
 function updateClock() {
   const timeElement = document.getElementById("time");
   if (!timeElement) return;
+
   const date = new Date();
   let hours = date.getHours();
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12; hours = hours ? hours : 12;
-  const time = `${hours}:${minutes}`;
-  timeElement.textContent = time;
+
+  hours = hours % 12 || 12;
+
+  timeElement.textContent = `${hours}:${minutes}`;
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// --- Search handling ---
-const searchInput = document.getElementById('search-input');
+// ===============================
+// Google Search
+// ===============================
+const searchInput = document.getElementById("search-input");
+
 if (searchInput) {
   searchInput.addEventListener("keypress", (event) => {
-    if (event.key === "Enter") {
-      const query = searchInput.value.trim();
-      if (query) {
-        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-        window.open(googleSearchUrl, '_blank');
-      }
-    }
+    if (event.key === "Enter") redirectToGoogle();
   });
 }
 
 function redirectToGoogle() {
-  const inp = document.getElementById('search-input');
-  if (!inp) return alert('Search input not found.');
-  const searchQuery = inp.value.trim();
-  if (searchQuery) {
-    const googleSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(searchQuery);
-    window.open(googleSearchUrl, '_blank');
-  } else {
-    alert('Please enter a search term.');
-  }
+  const value = searchInput.value.trim();
+  if (value) window.open(`https://www.google.com/search?q=${encodeURIComponent(value)}`, "_blank");
 }
 
-// --- Bubbles: add, drag, persist ---
-const STORAGE_KEY = 'bubbles_v1';
-const addButton = document.getElementById('add-bubble');
+// ===============================
+// LocalStorage helpers
+// ===============================
+const STORAGE_KEY = "bubbles_v1";
 
-function generateId() { return 'circle_' + Date.now() + '_' + Math.floor(Math.random()*1000); }
+function generateId() {
+  return "bubble_" + Date.now() + "_" + Math.floor(Math.random() * 99999);
+}
 
-function loadBubblesFromStorage() {
+function loadBubbles() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.warn('Failed to parse bubbles from storage', e);
-    return null;
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
   }
 }
 
-function saveBubblesToStorage(list) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  } catch (e) {
-    console.warn('Failed to save bubbles to storage', e);
-  }
+function saveBubbles(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
-function getExistingBubblesFromDOM() {
-  const nodes = Array.from(document.querySelectorAll('.circle'));
-  const out = nodes.map(node => {
-    // ensure node has an id (so we can update by id later)
-    if (!node.id) node.id = generateId();
-    const rect = node.getBoundingClientRect();
-    // prefer inline style left/top if present; fall back to computed rect
-    const left = node.style.left ? node.style.left : Math.round(rect.left) + 'px';
-    const top = node.style.top ? node.style.top : Math.round(rect.top) + 'px';
-    const name = node.innerText.trim() || (node.querySelector('span')?.innerText) || 'link';
-    const href = node.getAttribute('href') || '#';
-    return { id: node.id, name, href, left, top };
-  });
-  return out;
+function deleteBubbleFromStorage(id) {
+  saveBubbles(loadBubbles().filter((b) => b.id !== id));
 }
 
-function clearExistingBubbleElements() {
-  document.querySelectorAll('.circle').forEach(n => n.remove());
-}
-
+// ===============================
+// Drag Handler (NO click logic here)
+// ===============================
 function attachDragHandlers(el) {
-  // Suggestion: in your CSS include `.circle { touch-action: none; user-select: none; }`
-  let startX = 0, startY = 0, offsetX = 0, offsetY = 0, moved = false;
-  el._suppressClickUntil = 0;
+  let startX, startY, offsetX, offsetY;
+  let moved = false;
   el._isPicked = false;
-  el._pickPointerMove = null;
 
-  el.addEventListener('pointerdown', function(e) {
-    // only primary button / single touch
-    if (e.button && e.button !== 0) return;
-    e.preventDefault();
-    startX = e.clientX; startY = e.clientY;
-    const rect = el.getBoundingClientRect();
-    offsetX = startX - rect.left; offsetY = startY - rect.top;
+  el.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0) return;
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const r = el.getBoundingClientRect();
+    offsetX = startX - r.left;
+    offsetY = startY - r.top;
+
     moved = false;
-    el.setPointerCapture?.(e.pointerId);
+    el.setPointerCapture(e.pointerId);
 
-    function onPointerMove(ev) {
+    function move(ev) {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
-      const distSq = dx*dx + dy*dy;
-      if (!moved && distSq > 36) { // > ~6px
-        moved = true;
-      }
+
+      if (!moved && dx * dx + dy * dy > 36) moved = true;
+
       if (moved) {
-        const x = Math.round(ev.clientX - offsetX);
-        const y = Math.round(ev.clientY - offsetY);
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
+        const x = ev.clientX - offsetX;
+        const y = ev.clientY - offsetY;
+
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+
+        // Trash visual
+        const elRect = el.getBoundingClientRect();
+        const binRect = trashBin.getBoundingClientRect();
+        const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+
+        const nearTrash =
+          elRect.right > binRect.left && elRect.bottom > binRect.top;
+
+        const deepOverlap =
+          elRect.right > hitRect.left && elRect.bottom > hitRect.top;
+
+        trashBin.classList.toggle("active", nearTrash);
+        trashBin.style.background = deepOverlap ? "#ff2222" : "red";
+        trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
       }
     }
 
-    function onPointerUp(ev) {
-      try { el.releasePointerCapture?.(ev.pointerId); } catch(_) {}
-      document.removeEventListener('pointermove', onPointerMove);
-      document.removeEventListener('pointerup', onPointerUp);
+    function up(ev) {
+      el.releasePointerCapture(e.pointerId);
+
+      trashBin.classList.remove("active");
+
+      const elRect = el.getBoundingClientRect();
+      const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+
+      if (elRect.right > hitRect.left && elRect.bottom > hitRect.top) {
+        deleteBubbleFromStorage(el.id);
+        el.remove();
+        cleanup();
+        return;
+      }
+
       if (moved) {
-        // short suppression window so the immediate click after placement doesn't navigate
-        el._suppressClickUntil = Date.now() + 300; // 300ms
-        updateBubblePositionInStorage(el.id, el.style.left, el.style.top);
+        saveBubblePosition(el);
       }
+
+      cleanup();
     }
 
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-  });
-
-  // click handler
-  el.addEventListener('click', function(e) {
-    const now = Date.now();
-    if (el._suppressClickUntil && now < el._suppressClickUntil) {
-      e.preventDefault(); e.stopImmediatePropagation();
-      el._suppressClickUntil = 0;
-      return;
+    function cleanup() {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
     }
-    if (el._isPicked) {
-      e.preventDefault(); e.stopImmediatePropagation();
-      stopPick(el);
-      el._suppressClickUntil = Date.now() + 300;
-      return;
-    }
-    // else allow default navigation behavior
-  });
 
-  // dblclick to enter pick/place mode
-  el.addEventListener('dblclick', function(e) {
-    e.preventDefault(); e.stopImmediatePropagation();
-    startPick(el, e.clientX, e.clientY);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
   });
 }
 
-function startPick(el, clientX, clientY) {
+// ===============================
+// Click & Double-click Handler (ONLY on link)
+// ===============================
+function attachClickHandlers(container) {
+  const link = container.querySelector(".bubble-link");
+  if (!link) return;
+
+  let clickTimer = null;
+
+  link.addEventListener("click", function (e) {
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      return;
+    }
+
+    clickTimer = setTimeout(() => {
+      clickTimer = null;
+      window.open(link.href, "_blank");
+    }, 180);
+  });
+
+  link.addEventListener("dblclick", function (e) {
+    e.preventDefault();
+    clearTimeout(clickTimer);
+    clickTimer = null;
+
+    const rect = container.getBoundingClientRect();
+    startPick(container, e.clientX, e.clientY);
+  });
+}
+
+// ===============================
+// Pick Mode
+// ===============================
+function startPick(el, cx, cy) {
   el._isPicked = true;
+
   const rect = el.getBoundingClientRect();
-  const offsetX = clientX - rect.left;
-  const offsetY = clientY - rect.top;
-  el._pickPointerMove = function(ev) {
-    const x = Math.round(ev.clientX - offsetX);
-    const y = Math.round(ev.clientY - offsetY);
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-  };
-  // listen to pointermove so it works on touch too
-  document.addEventListener('pointermove', el._pickPointerMove);
-  el.classList.add('dragging');
-}
+  const offsetX = cx - rect.left;
+  const offsetY = cy - rect.top;
 
-function stopPick(el) {
-  if (!el._isPicked) return;
-  el._isPicked = false;
-  if (el._pickPointerMove) {
-    document.removeEventListener('pointermove', el._pickPointerMove);
-    el._pickPointerMove = null;
+  function move(ev) {
+    el.style.left = ev.clientX - offsetX + "px";
+    el.style.top = ev.clientY - offsetY + "px";
   }
-  el.classList.remove('dragging');
-  updateBubblePositionInStorage(el.id, el.style.left, el.style.top);
+
+  function up() {
+    el._isPicked = false;
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+
+    saveBubblePosition(el);
+  }
+
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", up);
 }
 
-function updateBubblePositionInStorage(id, left, top) {
-  if (!id) return;
-  const list = loadBubblesFromStorage() || [];
-  const idx = list.findIndex(x => x.id === id);
-  const cleanLeft = left && left.toString().endsWith('px') ? left : (parseInt(left) + 'px');
-  const cleanTop = top && top.toString().endsWith('px') ? top : (parseInt(top) + 'px');
-  if (idx !== -1) {
-    list[idx].left = cleanLeft;
-    list[idx].top = cleanTop;
-    saveBubblesToStorage(list);
-  } else {
-    // if not found, add it (keeps storage in sync)
-    list.push({ id, name: document.getElementById(id)?.innerText?.trim() || 'link', href: document.getElementById(id)?.getAttribute('href') || '#', left: cleanLeft, top: cleanTop });
-    saveBubblesToStorage(list);
+// ===============================
+// Save bubble position
+// ===============================
+function saveBubblePosition(el) {
+  const list = loadBubbles();
+  const idx = list.findIndex((b) => b.id === el.id);
+  if (idx >= 0) {
+    list[idx].left = el.style.left;
+    list[idx].top = el.style.top;
+    saveBubbles(list);
   }
 }
 
+// ===============================
+// Create bubble
+// ===============================
 function createBubbleElement(b) {
-  const a = document.createElement('a');
-  a.className = 'circle';
-  a.id = b.id;
-  a.href = b.href || '#';
-  a.target = '_blank';
-  const span = document.createElement('span');
-  span.textContent = b.name || 'link';
-  a.appendChild(span);
-  a.style.left = b.left || '100px';
-  a.style.top = b.top || '100px';
-  a.style.position = 'absolute';
-  // suggested CSS: a.circle { position:absolute; width:150px; height:150px; display:flex; align-items:center; justify-content:center; }
-  attachDragHandlers(a);
-  document.body.appendChild(a);
-  return a;
+  const div = document.createElement("div");
+  div.className = "circle";
+  div.id = b.id;
+  div.style.left = b.left;
+  div.style.top = b.top;
+
+  const link = document.createElement("a");
+  link.className = "bubble-link";
+  link.href = b.href;
+  link.target = "_blank";
+
+  const span = document.createElement("span");
+  span.textContent = b.name;
+
+  link.appendChild(span);
+  div.appendChild(link);
+
+  attachDragHandlers(div);
+  attachClickHandlers(div);
+
+  document.body.appendChild(div);
 }
 
+// ===============================
+// Render
+// ===============================
 function renderBubbles(list) {
-  clearExistingBubbleElements();
-  list.forEach(b => createBubbleElement(b));
+  document.querySelectorAll(".circle").forEach((n) => n.remove());
+  list.forEach((b) => createBubbleElement(b));
 }
 
-function addBubble() {
-  const name = prompt('Bubble name (label):', 'New');
-  if (name === null) return; // cancelled
-  const href = prompt('Bubble URL (include https://):', 'https://');
-  if (href === null) return;
-  const w = 180, h = 180;
-  const leftPx = Math.round(window.innerWidth/2 - w/2) + 'px';
-  const topPx = Math.round(window.innerHeight/2 - h/2) + 'px';
+// ===============================
+// Add bubble
+// ===============================
+document.getElementById("add-bubble").onclick = function () {
+  const name = prompt("Bubble Name:");
+  if (!name) return;
+
+  const href = prompt("Bubble URL (https://...)");
+  if (!href) return;
+
   const id = generateId();
-  const b = { id: id, name: name || 'New', href: href || '#', left: leftPx, top: topPx };
-  const list = loadBubblesFromStorage() || [];
-  list.push(b);
-  saveBubblesToStorage(list);
-  createBubbleElement(b);
+  const bubble = {
+    id,
+    name,
+    href,
+    left: `${window.innerWidth / 2 - 100}px`,
+    top: `${window.innerHeight / 2 - 100}px`,
+  };
+
+  const list = loadBubbles();
+  list.push(bubble);
+  saveBubbles(list);
+
+  createBubbleElement(bubble);
+};
+
+// ===============================
+// Init
+// ===============================
+let bubbles = loadBubbles();
+
+// First load: import default HTML bubbles
+if (!bubbles.length) {
+  bubbles = Array.from(document.querySelectorAll(".circle")).map((n) => ({
+    id: n.id || generateId(),
+    name: n.innerText.trim(),
+    href: n.getAttribute("href"),
+    left: n.style.left || n.getBoundingClientRect().left + "px",
+    top: n.style.top || n.getBoundingClientRect().top + "px",
+  }));
+  saveBubbles(bubbles);
 }
 
-if (addButton) addButton.addEventListener('click', addBubble);
-
-// Initialize bubbles
-let bubbles = loadBubblesFromStorage();
-if (!bubbles) {
-  const captured = getExistingBubblesFromDOM();
-  saveBubblesToStorage(captured);
-  bubbles = captured;
-  // Ensure DOM nodes have handlers (they already have ids)
-  document.querySelectorAll('.circle').forEach(n => attachDragHandlers(n));
-} else {
-  renderBubbles(bubbles);
-}
+renderBubbles(bubbles);
