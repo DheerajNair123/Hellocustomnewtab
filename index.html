@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab Dashboard</title>
+  <link rel="icon" href="tt.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="main">
+  <div id="cursor"></div>
+</div>
+
+<!-- Search -->
+<div class="search-container">
+  <input type="text" id="search-input" class="search-box" placeholder="Search Google..." autofocus />
+  <button type="button" class="search-button" onclick="redirectToGoogle()">Search</button>
+</div>
+
+<!-- Action Buttons -->
+<button id="dark-mode-toggle" class="dark-mode-toggle">🌙 Dark Mode</button>
+<button id="add-bubble" class="add-bubble">+ Add Bubble</button>
+
+<!-- Instructions -->
+<div id="instructions" class="instructions">
+  <strong>Tips:</strong> Click to open • Drag to move 
+</div>
+
+<!-- Default Bubbles -->
+<a href="https://www.youtube.com" class="circle" id="circle1"><span>YouTube</span></a>
+<a href="https://lmarena.ai/" class="circle" id="circle2"><span>LMArena</span></a>
+<a href="https://mail.google.com" class="circle" id="circle3"><span>Mail</span></a>
+<a href="https://github.com" class="circle" id="circle4"><span>GitHub</span></a>
+<a href="https://web.whatsapp.com" class="circle" id="circle5"><span>WhatsApp</span></a>
+<a href="https://web.telegram.org" class="circle" id="circle6"><span>Telegram</span></a>
+<a href="https://www.chatgpt.com" class="circle" id="circle7"><span>ChatGPT</span></a>
+
+<!-- Clock -->
+<div class="clock-container" id="clock-container">
+  <div id="clock">
+    <div id="time">00:00</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

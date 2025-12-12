@@ -1,0 +1,255 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: "Inter", Arial, sans-serif;
+  /* background: #ffcfce; */
+  background: radial-gradient(circle at center, #ffcfce 70%, #f4b8b6 100%);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Custom Cursor */
+#cursor {
+  position: fixed;
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  background-color: #0077ff;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Search Bar */
+.search-container {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.search-box {
+  padding: 12px 16px;
+  width: 320px;
+  border-radius: 25px;
+  border: 1px solid #bbb;
+  font-size: 16px;
+}
+
+.search-button {
+  padding: 12px 20px;
+  border-radius: 25px;
+  background: #0077ff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.search-button:hover {
+  transform: scale(1.05);
+}
+
+/* Dark Mode Toggle */
+.dark-mode-toggle {
+  position: absolute;
+  top: 48%;
+  right: 1%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  background: #222;
+  color: white;
+  cursor: pointer;
+  z-index: 9999;
+  transition: 0.2s;
+}
+.add-bubble {
+  position: absolute;
+  top: 8%;
+  right: 4%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 20px;
+  /* background: #222; */
+  color: white;
+  cursor: pointer;
+  z-index: 9999;
+  transition: 0.2s;
+  right: 28%;
+  background: #28a745;
+}
+.add-bubble:hover,
+.dark-mode-toggle:hover {
+  transform: scale(1.05);
+}
+
+/* Instructions */
+.instructions {
+  position: absolute;
+  top: 92%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.75);
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+}
+
+/* Bubbles */
+
+/* LIGHT THEME GLASS BUBBLE — FIXED */
+.circle {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+
+  background: rgba(255, 245, 240, 0.35); /* warm tinted glass */
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+
+  border: 1px solid rgba(22, 8, 8, 0.126);
+
+  /* dual highlights */
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.55), rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 70% 70%, rgba(255,255,255,0.15), rgba(255,255,255,0) 60%);
+
+  /* soft shadows */
+  box-shadow: 
+    0 6px 20px rgba(255,180,170,0.15),
+    inset 0 0 8px rgba(255,255,255,0.2);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #5a3e36; /* warm, readable text */
+  font-size: 25px;
+  font-weight: 500;
+  transition: 0.25s ease;
+}
+
+
+/*.circle {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: #e68f4dae;
+  background-image:
+    radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px);
+  /* backdrop-filter: blur(12px); */
+  /*color: #222;
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  font-size: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  user-select: none;
+  touch-action: none;
+  transition: 0.25s ease;
+}*/
+
+
+.circle:hover {
+  transform: scale(1.09);
+  filter: brightness(1.1);
+  box-shadow: 0 20px 35px rgba(0,0,0,0.25);
+}
+
+/* Hover font animation */
+.circle span {
+  transition: 0.2s ease;
+}
+.circle:hover span {
+  transform: scale(1.1);
+  font-weight: 600;
+}
+
+/* Dragging Effect */
+.circle.dragging {
+  transform: scale(1.12);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+/* Clock */
+.clock-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 25px 40px;
+  border-radius: 18px;
+  background: #ffdbbb;
+  font-size: 70px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: black;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* DARK THEME */
+body.dark-theme {
+  background: #000000e7;
+  color: white;
+}
+
+body.dark-theme .circle {
+  background: rgba(255, 255, 255, 0.08); /* darker glass for dark mode */
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+
+  border: 1px solid rgba(255, 255, 255, 0.22); /* softer border */
+  border-radius: 50%;
+
+  /* soft reflective highlight */
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.22), rgba(255,255,255,0.03) 60%);
+
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.55),   /* deep shadow for dark mode */
+    inset 0 0 14px rgba(255,255,255,0.04); /* subtle inner glow */
+
+  color: #e5eaff; /* soft blue-white for readability */
+}
+
+
+/* body.dark-theme .circle {
+  /* background: #20a1a1; */
+  /* color: rgb(28, 5, 58); */
+  /*background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.8);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.35), rgba(255,255,255,0.1));
+} */
+
+body.dark-theme .clock-container {
+  background: #333;
+  color: #00eaff;
+}
+
+body.dark-theme .search-box {
+  background: #222;
+  color: white;
+  border: 1px solid #444;
+}
+
+body.dark-theme .instructions {
+  background: rgba(20,20,20,0.75);
+  color: white;
+}
