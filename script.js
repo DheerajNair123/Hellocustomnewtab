@@ -370,21 +370,39 @@ document.getElementById("add-bubble").onclick = function () {
   createBubbleElement(bubble);
 };
 
+function getRandomPosition() {
+  const bubbleSize = 250; // circle diameter
+  const padding = 60; // keep away from edges
+
+  const x = Math.random() * (window.innerWidth - bubbleSize - padding * 2) + padding;
+  const y = Math.random() * (window.innerHeight - bubbleSize - padding * 2) + padding;
+
+  return { left: `${x}px`, top: `${y}px` };
+}
+
+
 // ===============================
 // Init
 // ===============================
 let bubbles = loadBubbles();
 
 // First load: import default HTML bubbles
+// First load: import default HTML bubbles with RANDOM positions
 if (!bubbles.length) {
-  bubbles = Array.from(document.querySelectorAll(".circle")).map((n) => ({
-    id: n.id || generateId(),
-    name: n.innerText.trim(),
-    href: n.getAttribute("href"),
-    left: n.style.left || n.getBoundingClientRect().left + "px",
-    top: n.style.top || n.getBoundingClientRect().top + "px",
-  }));
+  bubbles = Array.from(document.querySelectorAll(".circle")).map((n) => {
+    const randomPos = getRandomPosition();
+
+    return {
+      id: n.id || generateId(),
+      name: n.innerText.trim(),
+      href: n.getAttribute("href"),
+      left: randomPos.left,
+      top: randomPos.top,
+    };
+  });
+
   saveBubbles(bubbles);
 }
+
 
 renderBubbles(bubbles);
