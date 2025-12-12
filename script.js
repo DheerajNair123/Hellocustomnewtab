@@ -1,5 +1,17 @@
 // == Bubble dashboard script ==
-const trashBin = document.getElementById("trash-bin");
+
+// ===============================
+// Create Trash Bin
+// ===============================
+function createTrashBin() {
+  const trashBin = document.createElement("div");
+  trashBin.id = "trash-bin";
+  trashBin.innerHTML = '🗑️<div id="trash-hit"></div>';
+  document.body.appendChild(trashBin);
+  return trashBin;
+}
+
+const trashBin = createTrashBin();
 
 var main = document.querySelector("#main") || document.body;
 var cursor = document.querySelector("#cursor");
@@ -83,16 +95,29 @@ function deleteBubbleFromStorage(id) {
 }
 
 // ===============================
-// Drag Handler (NO click logic here)
+// Drag Handler - FIXED
 // ===============================
 function attachDragHandlers(el) {
   let startX, startY, offsetX, offsetY;
   let moved = false;
+  let pointerDownTime = 0;
   el._isPicked = false;
+  el._justDragged = false; // NEW: flag to track if we just dragged
 
   el.addEventListener("pointerdown", function (e) {
     if (e.button !== 0) return;
+    
+    // If clicking on the link with Shift, don't interfere
+    if (e.shiftKey) return;
 
+    // Check if we're clicking directly on the link element
+    const clickedLink = e.target.closest('.bubble-link');
+    if (clickedLink && !e.shiftKey) {
+      // Let the click handler deal with it
+      return;
+    }
+
+    pointerDownTime = Date.now();
     startX = e.clientX;
     startY = e.clientY;
 
@@ -101,6 +126,7 @@ function attachDragHandlers(el) {
     offsetY = startY - r.top;
 
     moved = false;
+    el._justDragged = false; // Reset flag
     el.setPointerCapture(e.pointerId);
 
     function move(ev) {
@@ -150,6 +176,12 @@ function attachDragHandlers(el) {
 
       if (moved) {
         saveBubblePosition(el);
+        el._justDragged = true; // Mark that we just finished dragging
+        
+        // Clear the flag after a short delay
+        setTimeout(() => {
+          el._justDragged = false;
+        }, 100);
       }
 
       cleanup();
@@ -166,34 +198,30 @@ function attachDragHandlers(el) {
 }
 
 // ===============================
-// Click & Double-click Handler (ONLY on link)
+// Click Handler - Simple & Reliable
 // ===============================
 function attachClickHandlers(container) {
   const link = container.querySelector(".bubble-link");
   if (!link) return;
 
-  let clickTimer = null;
-
   link.addEventListener("click", function (e) {
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      clickTimer = null;
+    // If we just finished dragging, ignore this click
+    if (container._justDragged) {
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
-
-    clickTimer = setTimeout(() => {
-      clickTimer = null;
-      window.open(link.href, "_blank");
-    }, 180);
-  });
-
-  link.addEventListener("dblclick", function (e) {
+    
     e.preventDefault();
-    clearTimeout(clickTimer);
-    clickTimer = null;
-
-    const rect = container.getBoundingClientRect();
-    startPick(container, e.clientX, e.clientY);
+    e.stopPropagation();
+    
+    if (e.shiftKey) {
+      // Shift + Click = Pick mode (drag without needing to start from edge)
+      startPick(container, e.clientX, e.clientY);
+    } else {
+      // Normal click = Open link
+      window.open(link.href, "_blank");
+    }
   });
 }
 
@@ -208,16 +236,60 @@ function startPick(el, cx, cy) {
   const offsetY = cy - rect.top;
 
   function move(ev) {
-    el.style.left = ev.clientX - offsetX + "px";
-    el.style.top = ev.clientY - offsetY + "px";
+    const x = ev.clientX - offsetX;
+    const y = ev.clientY - offsetY;
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+    // ===============================
+    // TRASH BIN LOGIC FOR PICK MODE
+    // ===============================
+    const elRect = el.getBoundingClientRect();
+    const binRect = trashBin.getBoundingClientRect();
+    const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+
+    const nearTrash =
+      elRect.right > binRect.left && elRect.bottom > binRect.top;
+
+    const deepOverlap =
+      elRect.right > hitRect.left && elRect.bottom > hitRect.top;
+
+    // Show bin if near
+    trashBin.classList.toggle("active", nearTrash);
+
+    trashBin.style.background = deepOverlap ? "#ff2222" : "red";
+    trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
   }
 
-  function up() {
+  function up(ev) {
     el._isPicked = false;
-    document.removeEventListener("pointermove", move);
-    document.removeEventListener("pointerup", up);
+
+    // ===============================
+    // CHECK DELETE ON DROP
+    // ===============================
+    const elRect = el.getBoundingClientRect();
+    const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+
+    const droppedInside =
+      elRect.right > hitRect.left && elRect.bottom > hitRect.top;
+
+    trashBin.classList.remove("active");
+
+    if (droppedInside) {
+      deleteBubbleFromStorage(el.id);
+      el.remove();
+      cleanup();
+      return;
+    }
 
     saveBubblePosition(el);
+    cleanup();
+  }
+
+  function cleanup() {
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
   }
 
   document.addEventListener("pointermove", move);
