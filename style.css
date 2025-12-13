@@ -151,8 +151,11 @@ body {
   font-size: 25px;
   font-weight: 500;
   transition: 0.25s ease;
-  position: absolute;
+  /* position: absolute; */
   pointer-events: auto;
+  position: absolute;
+  touch-action: none;
+  user-select: none;
 }
 
 

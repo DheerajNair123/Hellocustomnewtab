@@ -141,69 +141,52 @@ function deleteBubbleFromStorage(id) {
 // ===============================
 function attachDragHandlers(el) {
   let startX, startY, offsetX, offsetY;
-  let moved = false;
-  let pointerDownTime = 0;
-  el._isPicked = false;
-  el._justDragged = false; // NEW: flag to track if we just dragged
+  let dragging = false;
 
-  el.addEventListener("pointerdown", function (e) {
+  el.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
-    
-    // If clicking on the link with Shift, don't interfere
-    if (e.shiftKey) return;
+    if (!e.shiftKey) return; // 🔑 ONLY SHIFT ENABLES DRAG
 
-    // Check if we're clicking directly on the link element
-    const clickedLink = e.target.closest('.bubble-link');
-    if (clickedLink && !e.shiftKey) {
-      // Let the click handler deal with it
-      return;
-    }
+    e.preventDefault();
 
-    pointerDownTime = Date.now();
+    const rect = el.getBoundingClientRect();
     startX = e.clientX;
     startY = e.clientY;
+    offsetX = startX - rect.left;
+    offsetY = startY - rect.top;
 
-    const r = el.getBoundingClientRect();
-    offsetX = startX - r.left;
-    offsetY = startY - r.top;
-
-    moved = false;
-    el._justDragged = false; // Reset flag
+    dragging = true;
     el.setPointerCapture(e.pointerId);
 
     function move(ev) {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
+      if (!dragging) return;
 
-      if (!moved && dx * dx + dy * dy > 36) moved = true;
+      const x = ev.clientX - offsetX;
+      const y = ev.clientY - offsetY;
 
-      if (moved) {
-        const x = ev.clientX - offsetX;
-        const y = ev.clientY - offsetY;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
 
-        el.style.left = `${x}px`;
-        el.style.top = `${y}px`;
+      // ---- Trash detection ----
+      const elRect = el.getBoundingClientRect();
+      const binRect = trashBin.getBoundingClientRect();
+      const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
 
-        // Trash visual
-        const elRect = el.getBoundingClientRect();
-        const binRect = trashBin.getBoundingClientRect();
-        const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+      const nearTrash =
+        elRect.right > binRect.left &&
+        elRect.bottom > binRect.top;
 
-        const nearTrash =
-          elRect.right > binRect.left && elRect.bottom > binRect.top;
+      const deepOverlap =
+        elRect.right > hitRect.left &&
+        elRect.bottom > hitRect.top;
 
-        const deepOverlap =
-          elRect.right > hitRect.left && elRect.bottom > hitRect.top;
-
-        trashBin.classList.toggle("active", nearTrash);
-        trashBin.style.background = deepOverlap ? "#ff2222" : "red";
-        trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
-      }
+      trashBin.classList.toggle("active", nearTrash);
+      trashBin.style.background = deepOverlap ? "#ff2222" : "red";
+      trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
     }
 
-    function up(ev) {
-      el.releasePointerCapture(e.pointerId);
-
+    function up() {
+      dragging = false;
       trashBin.classList.remove("active");
 
       const elRect = el.getBoundingClientRect();
@@ -212,18 +195,8 @@ function attachDragHandlers(el) {
       if (elRect.right > hitRect.left && elRect.bottom > hitRect.top) {
         deleteBubbleFromStorage(el.id);
         el.remove();
-        cleanup();
-        return;
-      }
-
-      if (moved) {
+      } else {
         saveBubblePosition(el);
-        el._justDragged = true; // Mark that we just finished dragging
-        
-        // Clear the flag after a short delay
-        setTimeout(() => {
-          el._justDragged = false;
-        }, 100);
       }
 
       cleanup();
@@ -238,32 +211,21 @@ function attachDragHandlers(el) {
     document.addEventListener("pointerup", up);
   });
 }
-
 // ===============================
 // Click Handler - Simple & Reliable
 // ===============================
 function attachClickHandlers(container) {
   const link = container.querySelector(".bubble-link");
-  if (!link) return;
 
-  link.addEventListener("click", function (e) {
-    // If we just finished dragging, ignore this click
-    if (container._justDragged) {
+  link.addEventListener("click", (e) => {
+    if (e.shiftKey) {
+      // Shift-click is for dragging, never open link
       e.preventDefault();
-      e.stopPropagation();
       return;
     }
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.shiftKey) {
-      // Shift + Click = Pick mode (drag without needing to start from edge)
-      startPick(container, e.clientX, e.clientY);
-    } else {
-      // Normal click = Open link
-      window.location.href = link.href;
-    }
+
+    // Normal click → open
+    window.location.href = link.href;
   });
 }
 
