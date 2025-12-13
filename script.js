@@ -55,27 +55,27 @@ function createTrashBin() {
 
 const trashBin = createTrashBin();
 
-var main = document.querySelector("#main") || document.body;
-var cursor = document.querySelector("#cursor");
+// var main = document.querySelector("#main") || document.body;
+// var cursor = document.querySelector("#cursor");
 
-// ===============================
-// Cursor movement
-// ===============================
-if (typeof gsap !== "undefined" && cursor) {
-  main.addEventListener("mousemove", (e) => {
-    gsap.to(cursor, {
-      x: e.pageX,
-      y: e.pageY,
-      duration: 0.6,
-      ease: "power.inOut",
-    });
-  });
-} else if (cursor) {
-  main.addEventListener("mousemove", (e) => {
-    cursor.style.left = e.pageX + "px";
-    cursor.style.top = e.pageY + "px";
-  });
-}
+// // ===============================
+// // Cursor movement
+// // ===============================
+// if (typeof gsap !== "undefined" && cursor) {
+//   main.addEventListener("mousemove", (e) => {
+//     gsap.to(cursor, {
+//       x: e.pageX,
+//       y: e.pageY,
+//       duration: 0.6,
+//       ease: "power.inOut",
+//     });
+//   });
+// } else if (cursor) {
+//   main.addEventListener("mousemove", (e) => {
+//     cursor.style.left = e.pageX + "px";
+//     cursor.style.top = e.pageY + "px";
+//   });
+// }
 
 // ===============================
 // Clock
@@ -108,8 +108,12 @@ if (searchInput) {
 
 function redirectToGoogle() {
   const value = searchInput.value.trim();
-  if (value) window.open(`https://www.google.com/search?q=${encodeURIComponent(value)}`, "_blank");
+  if (!value) return;
+
+  window.location.href =
+    `https://www.google.com/search?q=${encodeURIComponent(value)}`;
 }
+
 
 // ===============================
 // LocalStorage helpers
@@ -383,6 +387,20 @@ function getRandomPosition() {
 
   return { left: `${x}px`, top: `${y}px` };
 }
+// ===============================
+// UX polish: Shift = drag mode
+// ===============================
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Shift") {
+    document.body.classList.add("drag-mode");
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Shift") {
+    document.body.classList.remove("drag-mode");
+  }
+});
 
 
 // ===============================
@@ -410,3 +428,32 @@ if (!bubbles.length) {
 
 
 renderBubbles(bubbles);
+// ===============================
+// Dark mode persistence (FIXED)
+// ===============================
+// ===============================
+// Dark mode persistence (CLICK + REFRESH FIXED)
+// ===============================
+(function initDarkMode() {
+  const darkToggle = document.getElementById("dark-mode-toggle");
+  const DARK_KEY = "dark_mode_enabled";
+
+  if (!darkToggle) return;
+
+  // 1️⃣ Read stored state
+  let isDark = localStorage.getItem(DARK_KEY) === "true";
+
+  // 2️⃣ Apply immediately
+  document.body.classList.toggle("dark-theme", isDark);
+  darkToggle.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+
+  // 3️⃣ Click → toggle LIVE
+  darkToggle.addEventListener("click", () => {
+    isDark = !isDark;
+
+    document.body.classList.toggle("dark-theme", isDark);
+    localStorage.setItem(DARK_KEY, isDark);
+
+    darkToggle.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+  });
+})();

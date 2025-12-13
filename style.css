@@ -157,6 +157,17 @@ body {
   touch-action: none;
   user-select: none;
 }
+/* ===============================
+   Drag mode visual feedback
+   =============================== */
+body.drag-mode .circle {
+  cursor: grab;
+}
+
+body.drag-mode .circle:active {
+  cursor: grabbing;
+}
+
 
 
 /*.circle {
