@@ -107,7 +107,10 @@ if (searchInput) {
 }
 
 function redirectToGoogle() {
-  const value = searchInput.value.trim();
+  const input = document.getElementById("search-input");
+  if (!input) return;
+  
+  const value = input.value.trim();
   if (!value) return;
 
   window.location.href =
@@ -146,10 +149,18 @@ function clamp(val, min, max) {
 // ===============================
 // Drag Handler - FIXED
 // ===============================
-const DRAG_EASE = 0.18;     // lower = smoother, higher = snappier
+const DRAG_EASE = 0.14;     // lower = smoother, higher = snappier
 const BUBBLE_SIZE = 250;   // your circle size
 const EDGE_PADDING = 8;    // small gap from screen edges
 function attachDragHandlers(el) {
+  //momentum flipping
+  
+  let lastX = 0;
+  let lastY = 0;
+  let lastTime = 0;
+  let velocityX = 0;
+  let velocityY = 0;
+
   let startX, startY, offsetX, offsetY;
   let dragging = false;
 
@@ -307,9 +318,25 @@ bubbles.forEach(other => {
 
       targetX = clamp(rawX, EDGE_PADDING, maxX);
       targetY = clamp(rawY, EDGE_PADDING, maxY);
+      //moentum flipping
+      const now = performance.now();
+      const dt = now - lastTime || 16;
+
+      velocityX = (targetX - lastX) / dt;
+      velocityY = (targetY - lastY) / dt;
+
+      lastX = targetX;
+      lastY = targetY;
+      lastTime = now;
+
+      //for hard
+      // el.style.transition = "transform 0.15s ease";
+      el.style.transform = "scale(1.06)";
+
     }
 
     function up() {
+      el.style.transform = "";
       dragging = false;
       el.classList.remove("dragging");
       trashBin.classList.remove("active");
@@ -331,8 +358,11 @@ bubbles.forEach(other => {
         el.style.left = targetX + "px";
         el.style.top = targetY + "px";
         saveBubblePosition(el);
+
+        // 🌀 apply momentum
+        applyMomentum(el, velocityX, velocityY);
          // 🧲 auto-arrange neighbors
-        autoArrange(el);
+        // autoArrange(el);
       }
 
       cleanup();
@@ -407,6 +437,38 @@ function autoArrange(sourceBubble) {
 
     saveBubblePosition(other);
   });
+}
+function applyMomentum(el, vx, vy) {
+  const FRICTION = 0.88;
+  const STOP = 0.12;
+
+  let x = parseFloat(el.style.left);
+  let y = parseFloat(el.style.top);
+
+  function step() {
+    vx *= FRICTION;
+    vy *= FRICTION;
+
+    x += vx * 16;
+    y += vy * 16;
+
+    // clamp to viewport
+    x = clamp(x, EDGE_PADDING, window.innerWidth - BUBBLE_SIZE - EDGE_PADDING);
+    y = clamp(y, EDGE_PADDING, window.innerHeight - BUBBLE_SIZE - EDGE_PADDING);
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+    if (Math.abs(vx) > STOP || Math.abs(vy) > STOP) {
+      requestAnimationFrame(step);
+    } else {
+      saveBubblePosition(el);
+      // 🧲 relax neighbors AFTER motion fully stops
+      autoArrange(el);
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bubble Dashboard",
   "description": "A customizable new tab page with draggable bubble shortcuts. Click to navigate, Shift+Click to reposition, drag to trash to delete.",
-  "version": "2.0",
+  "version": "2.1",
   "author": "Dheeraj Nair",
 
   "chrome_url_overrides": {
