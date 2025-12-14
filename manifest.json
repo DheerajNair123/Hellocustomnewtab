@@ -1,30 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Bubble Dashboard ",
+  "name": "Bubble Dashboard",
   "description": "A customizable new tab page with draggable bubble shortcuts. Click to navigate, Shift+Click to reposition, drag to trash to delete.",
   "version": "2.0",
   "author": "Dheeraj Nair",
+
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
+
   "icons": {
-    "16": "icon1.jpg"
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": [
-        
-        "script.js"
-      ]
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["script.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+
   "permissions": [
     "storage"
   ]
