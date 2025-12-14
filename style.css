@@ -87,7 +87,7 @@ body {
 }
 .add-bubble {
   position: absolute;
-  top: 8%;
+  top: 8.5%;
   right: 4%;
   padding: 10px 16px;
   border: none;
@@ -336,4 +336,21 @@ body.dark-theme .instructions {
   border-top-left-radius: 90px;
 
   pointer-events: none;
+}
+/* ===============================
+   Idle floating animation
+   =============================== */
+@keyframes bubbleFloat {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.circle {
+  animation: bubbleFloat 6s ease-in-out infinite;
+}
+
+/* Stop floating while dragging */
+.circle.dragging {
+  animation: none !important;
 }

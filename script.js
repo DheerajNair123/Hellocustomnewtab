@@ -139,68 +139,200 @@ function saveBubbles(list) {
 function deleteBubbleFromStorage(id) {
   saveBubbles(loadBubbles().filter((b) => b.id !== id));
 }
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
 
 // ===============================
 // Drag Handler - FIXED
 // ===============================
+const DRAG_EASE = 0.18;     // lower = smoother, higher = snappier
+const BUBBLE_SIZE = 250;   // your circle size
+const EDGE_PADDING = 8;    // small gap from screen edges
 function attachDragHandlers(el) {
   let startX, startY, offsetX, offsetY;
   let dragging = false;
 
+  // current rendered position
+  let currentX = parseFloat(el.style.left);
+  let currentY = parseFloat(el.style.top);
+
+  // target position (where pointer wants it to go)
+  let targetX = currentX;
+  let targetY = currentY;
+
+  let rafId = null;
+
+  function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function animate() {
+    // smooth interpolation
+    currentX += (targetX - currentX) * DRAG_EASE;
+    currentY += (targetY - currentY) * DRAG_EASE;
+
+//     // ===============================
+// // Soft collision avoidance
+// // ===============================
+// const bubbles = document.querySelectorAll(".circle");
+
+// bubbles.forEach(other => {
+//   if (other === el) return;
+
+//   const r1 = {
+//     left: currentX,
+//     top: currentY,
+//     right: currentX + BUBBLE_SIZE,
+//     bottom: currentY + BUBBLE_SIZE
+//   };
+
+//   const r2 = other.getBoundingClientRect();
+
+//   if (rectsOverlap(r1, r2)) {
+//     const cx1 = r1.left + BUBBLE_SIZE / 2;
+//     const cy1 = r1.top + BUBBLE_SIZE / 2;
+//     const cx2 = r2.left + BUBBLE_SIZE / 2;
+//     const cy2 = r2.top + BUBBLE_SIZE / 2;
+
+//     const dx = cx1 - cx2;
+//     const dy = cy1 - cy2;
+
+//     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+//     const push = 1.6; // ⭐ smooth strength (tune 1–2)
+
+//     currentX += (dx / dist) * push;
+//     currentY += (dy / dist) * push;
+//   }
+// });
+
+// ===============================
+// Hard collision resolution (no overlap)
+// ===============================
+const bubbles = document.querySelectorAll(".circle");
+
+bubbles.forEach(other => {
+  if (other === el) return;
+
+  const r1 = {
+    left: currentX,
+    top: currentY,
+    right: currentX + BUBBLE_SIZE,
+    bottom: currentY + BUBBLE_SIZE
+  };
+
+  const r2 = other.getBoundingClientRect();
+
+  if (rectsOverlap(r1, r2)) {
+    const cx1 = r1.left + BUBBLE_SIZE / 2;
+    const cy1 = r1.top + BUBBLE_SIZE / 2;
+    const cx2 = r2.left + BUBBLE_SIZE / 2;
+    const cy2 = r2.top + BUBBLE_SIZE / 2;
+
+    const dx = cx1 - cx2;
+    const dy = cy1 - cy2;
+
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+    const minDist = BUBBLE_SIZE;
+    const overlap = minDist - dist;
+
+    if (overlap > 0) {
+      const nx = dx / dist;
+      const ny = dy / dist;
+
+      // push OUT by overlap (scaled for smoothness)
+      currentX += nx * overlap * 0.6;
+      currentY += ny * overlap * 0.6;
+    }
+  }
+});
+
+    el.style.left = currentX + "px";
+    el.style.top = currentY + "px";
+    
+    // Trash detection (uses current rendered position)
+    const elRect = el.getBoundingClientRect();
+    const binRect = trashBin.getBoundingClientRect();
+    const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
+
+    const nearTrash =
+      elRect.right > binRect.left &&
+      elRect.bottom > binRect.top;
+
+    const deepOverlap =
+      elRect.right > hitRect.left &&
+      elRect.bottom > hitRect.top;
+
+    trashBin.classList.toggle("active", nearTrash);
+    trashBin.style.background = deepOverlap ? "#ff2222" : "red";
+    trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
+
+    if (dragging) {
+      rafId = requestAnimationFrame(animate);
+    }
+  }
+
   el.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
-    if (!e.shiftKey) return; // 🔑 ONLY SHIFT ENABLES DRAG
+    if (!e.shiftKey) return; // Shift-only drag
 
     e.preventDefault();
 
     const rect = el.getBoundingClientRect();
     startX = e.clientX;
     startY = e.clientY;
+
     offsetX = startX - rect.left;
     offsetY = startY - rect.top;
 
+    currentX = rect.left;
+    currentY = rect.top;
+    targetX = currentX;
+    targetY = currentY;
+
     dragging = true;
+    el.classList.add("dragging");
     el.setPointerCapture(e.pointerId);
 
+    rafId = requestAnimationFrame(animate);
+
     function move(ev) {
-      if (!dragging) return;
+      const rawX = ev.clientX - offsetX;
+      const rawY = ev.clientY - offsetY;
 
-      const x = ev.clientX - offsetX;
-      const y = ev.clientY - offsetY;
+      // viewport bounds
+      const maxX = window.innerWidth - BUBBLE_SIZE - EDGE_PADDING;
+      const maxY = window.innerHeight - BUBBLE_SIZE - EDGE_PADDING;
 
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-
-      // ---- Trash detection ----
-      const elRect = el.getBoundingClientRect();
-      const binRect = trashBin.getBoundingClientRect();
-      const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
-
-      const nearTrash =
-        elRect.right > binRect.left &&
-        elRect.bottom > binRect.top;
-
-      const deepOverlap =
-        elRect.right > hitRect.left &&
-        elRect.bottom > hitRect.top;
-
-      trashBin.classList.toggle("active", nearTrash);
-      trashBin.style.background = deepOverlap ? "#ff2222" : "red";
-      trashBin.style.color = deepOverlap ? "white" : "#b3e7ff";
+      targetX = clamp(rawX, EDGE_PADDING, maxX);
+      targetY = clamp(rawY, EDGE_PADDING, maxY);
     }
 
     function up() {
       dragging = false;
+      el.classList.remove("dragging");
       trashBin.classList.remove("active");
+
+      cancelAnimationFrame(rafId);
 
       const elRect = el.getBoundingClientRect();
       const hitRect = document.getElementById("trash-hit").getBoundingClientRect();
 
-      if (elRect.right > hitRect.left && elRect.bottom > hitRect.top) {
+      // delete if dropped deep inside trash
+      if (
+        elRect.right > hitRect.left &&
+        elRect.bottom > hitRect.top
+      ) {
         deleteBubbleFromStorage(el.id);
         el.remove();
       } else {
+        // snap to final smooth position
+        el.style.left = targetX + "px";
+        el.style.top = targetY + "px";
         saveBubblePosition(el);
+         // 🧲 auto-arrange neighbors
+        autoArrange(el);
       }
 
       cleanup();
@@ -215,6 +347,69 @@ function attachDragHandlers(el) {
     document.addEventListener("pointerup", up);
   });
 }
+
+function autoArrange(sourceBubble) {
+  const bubbles = document.querySelectorAll(".circle");
+
+  bubbles.forEach(other => {
+    if (other === sourceBubble) return;
+
+    const r1 = sourceBubble.getBoundingClientRect();
+    const r2 = other.getBoundingClientRect();
+
+    if (!rectsOverlap(r1, r2)) return;
+
+    const cx1 = r1.left + BUBBLE_SIZE / 2;
+    const cy1 = r1.top + BUBBLE_SIZE / 2;
+    const cx2 = r2.left + BUBBLE_SIZE / 2;
+    const cy2 = r2.top + BUBBLE_SIZE / 2;
+
+    const dx = cx2 - cx1;
+    const dy = cy2 - cy1;
+
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const overlap = BUBBLE_SIZE - dist;
+
+    if (overlap <= 0) return;
+
+    const push = overlap * 1.5;
+
+    let nx = dx / dist;
+    let ny = dy / dist;
+
+    let targetX = r2.left + nx * push;
+    let targetY = r2.top + ny * push;
+
+    // keep inside screen
+    targetX = clamp(
+      targetX,
+      EDGE_PADDING,
+      window.innerWidth - BUBBLE_SIZE - EDGE_PADDING
+    );
+    targetY = clamp(
+      targetY,
+      EDGE_PADDING,
+      window.innerHeight - BUBBLE_SIZE - EDGE_PADDING
+    );
+
+    // smooth motion
+    if (window.gsap) {
+      gsap.to(other, {
+        left: targetX,
+        top: targetY,
+        duration: 0.35,
+        ease: "power3.out",
+      });
+    } else {
+      other.style.left = targetX + "px";
+      other.style.top = targetY + "px";
+    }
+
+    saveBubblePosition(other);
+  });
+}
+
+
 // ===============================
 // Click Handler - Simple & Reliable
 // ===============================
@@ -331,6 +526,8 @@ function createBubbleElement(b) {
   link.className = "bubble-link";
   link.href = b.href;
   // link.target = "_blank";
+  // randomize float delay so bubbles don't sync
+  div.style.animationDelay = `${Math.random() * 4}s`;
 
   const span = document.createElement("span");
   span.textContent = b.name;
@@ -457,3 +654,12 @@ renderBubbles(bubbles);
     darkToggle.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
   });
 })();
+
+function rectsOverlap(a, b) {
+  return !(
+    a.right < b.left ||
+    a.left > b.right ||
+    a.bottom < b.top ||
+    a.top > b.bottom
+  );
+}
