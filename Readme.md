@@ -1,8 +1,3 @@
-Nice, this README just needs to be **aligned with what you actually built now** (which is much more advanced than the old description).
-Below is a **clean, production-ready updated README**. You can **replace your current README.md entirely** with this.
-
----
-
 # 🌐 Bubble Dashboard — Custom New Tab Extension
 
 A **beautiful, physics-smooth, customizable New Tab dashboard** with draggable glass bubbles, Google search, live clock, dark mode persistence, and intuitive delete interactions — built to feel **premium and fluid**.
