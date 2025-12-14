@@ -1,107 +1,186 @@
-# Custom New Tab Page
-
-A beautiful, customizable browser new tab page with draggable bubbles, Google search, and a live clock.
-
-<!-- ![Preview](preview.png) -->
-
-## ✨ Features
-
-- **Quick Access Bubbles**: Seven customizable link bubbles with hover effects
-- **Add Custom Bubbles**: Create unlimited new bubbles with custom names and URLs
-- **Drag & Rearrange**: Move bubbles around with click-drag or double-click-to-pick mode
-- **Persistent Storage**: Your bubble positions and custom bubbles are saved in localStorage
-- **Google Search**: Quick search box with Enter key and button support
-- **Live Clock**: Real-time 12-hour format clock display
-- **Dark Mode**: Toggle between light and dark themes (persists across sessions)
-- **Custom Cursor**: Smooth animated cursor with GSAP animation
-- **Responsive Design**: Adapts to different screen sizes
-
-## 🎮 Controls
-
-- **Single-click** a bubble → Opens the link
-- **Double-click** a bubble → Enters move mode (bubble follows cursor)
-- **Click-and-drag** → Move bubble immediately
-- **Click to place** when in move mode → Saves position
-- **+ Add Bubble** button → Create new custom bubbles
-
-## 🚀 Quick Start
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/DheerajNair123/Hellocustomnewtab.git
-   ```
-
-2. Open `index.html` in your browser, or set it as your custom new tab page using a browser extension like:
-   - [New Tab Redirect](https://chrome.google.com/webstore/detail/new-tab-redirect) (Chrome)
-   - [Custom New Tab Page](https://addons.mozilla.org/en-US/firefox/addon/custom-new-tab-page/) (Firefox)
-
-
-## 🎨 Customization
-
-### Add Default Bubbles
-Edit the HTML in `index.html` to add more default circles:
-
-```html
-<a href="https://example.com" class="circle" id="circle8">
-  <span>Example</span>
-</a>
-```
-
-### Change Bubble Styles
-Modify `style.css` to customize colors, sizes, and hover effects:
-
-```css
-#circle1 {
-  background-color: #your-color;
-  width: 250px;
-  height: 250px;
-}
-```
-
-### Adjust Dark Mode Colors
-Update the `.dark-theme` selectors in `style.css` to match your preferences.
-
-## 🛠️ Technologies Used
-
-- **HTML5** - Structure
-- **CSS3** - Styling and animations
-- **JavaScript (ES6+)** - Interactivity and logic
-- **GSAP** - Smooth cursor animations
-- **localStorage** - Data persistence
-
-## 📝 Default Bubbles
-
-1. YouTube
-2. LMArena AI
-3. Gmail
-4. GitHub
-5. WhatsApp Web
-6. Telegram Web
-7. ChatGPT
-
-## 🐛 Known Issues
-
-- Folder name `assests/` is misspelled (should be `assets/`)
-- First-time users need to refresh after adding their first custom bubble for full functionality
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
-
-## 💡 Future Enhancements
-
-- [ ] Context menu for edit/delete bubbles
-- [ ] Import/export bubble configurations
-- [ ] Weather widget
-- [ ] Background customization
-- [ ] Keyboard shortcuts (1-7 keys for quick access)
-- [ ] Pomodoro timer
-- [ ] Voice search support
+Nice, this README just needs to be **aligned with what you actually built now** (which is much more advanced than the old description).
+Below is a **clean, production-ready updated README**. You can **replace your current README.md entirely** with this.
 
 ---
 
-Made with ❤️ | Star ⭐ this repo if you find it useful!
+# 🌐 Bubble Dashboard — Custom New Tab Extension
+
+A **beautiful, physics-smooth, customizable New Tab dashboard** with draggable glass bubbles, Google search, live clock, dark mode persistence, and intuitive delete interactions — built to feel **premium and fluid**.
+
+> Designed as a **Chrome New Tab extension** with smooth animations and thoughtful UX.
+
+---
+
+## ✨ Features
+
+* **Glassmorphism Bubbles**
+  Elegant frosted-glass bubbles with hover depth and smooth animations.
+
+* **Quick Access Shortcuts**
+  One-click access to your favorite websites.
+
+* **Add Unlimited Bubbles**
+  Create custom bubbles with your own name + URL.
+
+* **Shift-to-Drag Interaction (No Accidental Clicks)**
+
+  * Hold **Shift + Drag** to reposition bubbles
+  * Normal click always opens the link
+  * No misfires, no frustration
+
+* **Smooth Physics-Based Dragging**
+
+  * Eased movement (no jitter)
+  * Momentum-style motion
+  * Feels natural and premium
+  * Never leaves the screen bounds
+
+* **Trash Bin Delete (Drag to Corner)**
+
+  * Trash bin appears only while dragging
+  * Delete **only when dragged deep into corner**
+  * Drag out to cancel safely
+
+* **Persistent Layout**
+
+  * Bubble positions saved automatically
+  * Deleted bubbles stay deleted
+  * Layout restored on every new tab
+
+* **Google Search (Same Tab)**
+  Fast Google search directly in the current tab.
+
+* **Live Clock**
+  Clean 12-hour real-time clock at the center.
+
+* **Dark Mode (Persistent)**
+
+  * Toggle light/dark mode
+  * Choice is remembered across tabs & sessions
+
+* **Smooth Custom Cursor**
+  GSAP-powered cursor motion with graceful fallback.
+
+---
+
+## 🎮 Controls
+
+| Action                          | Behavior                |
+| ------------------------------- | ----------------------- |
+| **Click bubble**                | Open link               |
+| **Shift + Drag bubble**         | Move bubble             |
+| **Drag to bottom-right corner** | Delete bubble           |
+| **Drag away from trash**        | Cancel delete           |
+| **+ Add Bubble**                | Create new shortcut     |
+| **Dark Mode toggle**            | Switch theme (persists) |
+
+---
+
+## 🚀 Install as Chrome Extension (Recommended)
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/DheerajNair123/Hellocustomnewtab.git
+```
+
+### 2️⃣ Open Chrome Extensions
+
+* Go to `chrome://extensions`
+* Enable **Developer mode** (top-right)
+
+### 3️⃣ Load Extension
+
+* Click **Load unpacked**
+* Select the project folder
+
+🎉 Done!
+Every new tab now opens **Bubble Dashboard**.
+
+---
+
+## 🧩 Project Structure
+
+```
+├── index.html        # New Tab UI
+├── style.css         # Glass UI + dark mode styles
+├── script.js         # Drag physics, storage, logic
+├── icon.png          # Extension icon
+├── manifest.json     # Chrome extension config
+```
+
+---
+
+## 🛠️ Technologies Used
+
+* **HTML5** – Structure
+* **CSS3** – Glassmorphism, transitions, dark mode
+* **JavaScript (ES6+)** – Drag physics, state handling
+* **GSAP** – Smooth cursor animation
+* **localStorage** – Persistent layout & theme
+
+---
+
+## 🧪 UX Design Principles Used
+
+* No accidental actions (Shift-to-drag)
+* Forgiving delete (drag-in only)
+* Motion follows intention
+* No UI appears unless needed
+* Everything reversible until release
+
+---
+
+## 📝 Default Bubbles
+
+* YouTube
+* LMArena
+* Gmail
+* GitHub
+* WhatsApp Web
+* Telegram Web
+* ChatGPT
+
+(All fully removable and customizable)
+
+---
+
+## 🐛 Known Notes
+
+* First load randomizes bubble positions automatically
+* Works best on desktop Chrome (New Tab override)
+
+---
+
+## 💡 Future Enhancements
+
+* [ ] Edit bubble (rename / change URL)
+* [ ] Import / export layouts
+* [ ] Background picker (gradient / image)
+* [ ] Keyboard shortcuts
+* [ ] Idle floating animation
+* [ ] Sync across devices (Chrome storage)
+
+---
+
+## 📄 License
+
+MIT License — free to use, modify, and distribute.
+
+---
+
+## ⭐ Support
+
+If you like this project:
+
+* ⭐ Star the repo
+* 🧠 Share feedback
+* 🚀 Suggest ideas
+
+---
+
+**Built with care & obsession for UX**
+— *Dheeraj Nair* 💙
+
+
+Just say the word.
